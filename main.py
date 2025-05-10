@@ -22,7 +22,7 @@ for line in filtered_lines:
         combination = []
     else:
         combination.append(line)
-
+print(per_portion.keys())
 
 
 
