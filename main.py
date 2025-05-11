@@ -22,17 +22,55 @@ for line in filtered_lines:
         combination = []
     else:
         combination.append(line)
-print(per_portion.keys())
-
-
 
 max_menu = res.json()
 
-
-under_75 = []
+items = []
 
 for id, product in max_menu['Refs'].items():
-    if product['Price'] <= 75:
-        under_75.append(product)
+    name = product['Title']
+    price = product['Price']
+    if name in per_portion and price > 9 and price <= 75:
+        try:
+            kcal = float(per_portion[name][2].replace(',', '.'))
+            items.append({
+                'name': name,
+                'price': price,
+                'kcal': kcal
+            })
+        except:
+            continue
+
+best_combo = []
+max_kcal = 0
+
+def find_combinations(index, current_combo, total_price, total_kcal):
+    global best_combo, max_kcal
+
+    if total_price > 75:
+        return
+    if total_kcal > max_kcal:
+        max_kcal = total_kcal
+        best_combo = current_combo[:]
+
+    print(f'Best combo: {current_combo}')
+
+    for i in range(index, len(items)):
+        item = items[i]
+
+        find_combinations(
+            i + 1,
+            current_combo + [item],
+            total_price + item['price'],
+            total_kcal + item['kcal']
+        )
+
+find_combinations(0, [], 0, 0)
+
+print('Bästa kombinationen:')
+for item in best_combo:
+    print(f'- {item['name']} ({item['price']} kr, {item['kcal']} kcal)')
+
+print(f'Totalt: {sum(i['price'] for i in best_combo)} kr, {max_kcal:.0f} kcal')
 
 
