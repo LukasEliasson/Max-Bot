@@ -10,9 +10,7 @@ max_text: str = BeautifulSoup(net.text, 'html.parser').text
 lines = max_text.splitlines()
 filtered_lines = []
 per_portion = {}
-for line in lines:
-    line = line.strip()
-    filtered_lines.append(line)
+filtered_lines = [line.strip() for line in lines]
 
 combination = []
 for line in filtered_lines:
