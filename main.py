@@ -1,5 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
+from stringmatch import Match
 
 res = requests.get('https://web-images.futureordering.com/menus/maxburgers/se-sv-se-225-eatin.json.gz')
 net = requests.get('https://www.max.se/maten/naringsvarden/', verify=False)
@@ -24,22 +25,45 @@ for line in filtered_lines:
         combination.append(line)
 
 max_menu = res.json()
-
 items = []
 
 for id, product in max_menu['Refs'].items():
     name = product['Title']
     price = product['Price']
-    if name in per_portion and price > 9 and price <= 75:
-        try:
-            kcal = float(per_portion[name][2].replace(',', '.'))
+    
+    if price < 9 or price > 75 or 'IsDefault' in product.keys() or '15621' in product['Categories'].keys():
+        continue
+
+    components = []
+
+    if 'ord. pris' in name:
+        replaced_name = name.replace('&', '+')
+        components = replaced_name.split(' + ')
+        print(components, price)
+    else:
+        components = [name]
+    
+    kcal = 0
+
+    for component in components:
+
+        # Find matching in per_portion
+        match = Match()
+        product_match = match.get_best_match(component, list(per_portion.keys()))
+
+        print(f'Matched {component} to {product_match}')
+
+        if product_match:
+            try:
+                kcal += float(per_portion[product_match][2].replace(',', '.'))
+            except Exception as e:
+                raise Exception(e)
+                
             items.append({
                 'name': name,
                 'price': price,
                 'kcal': kcal
             })
-        except:
-            continue
 
 best_combo = []
 max_kcal = 0
@@ -52,8 +76,6 @@ def find_combinations(index, current_combo, total_price, total_kcal):
     if total_kcal > max_kcal:
         max_kcal = total_kcal
         best_combo = current_combo[:]
-
-    print(f'Best combo: {current_combo}')
 
     for i in range(index, len(items)):
         item = items[i]
