@@ -25,11 +25,18 @@ for line in filtered_lines:
 max_menu = res.json()
 items = []
 
+secret_menu_count = 1
+print('Secret Menu:')
 for id, product in max_menu['Refs'].items():
     name = product['Title']
     price = product['Price']
     
-    if price < 9 or price > 75 or 'IsDefault' in product.keys() or '15621' in product['Categories'].keys():
+    if '15621' in product['Categories'].keys():
+        print(f'{secret_menu_count}. {name} - {price} kr (ID: {product['Id']})')
+        secret_menu_count += 1
+        continue
+
+    if price < 9 or price > 75 or 'IsDefault' in product.keys():
         continue
 
     components = []
@@ -37,7 +44,6 @@ for id, product in max_menu['Refs'].items():
     if 'ord. pris' in name:
         replaced_name = name.replace('&', '+')
         components = replaced_name.split(' + ')
-        print(components, price)
     else:
         components = [name]
     
@@ -48,8 +54,6 @@ for id, product in max_menu['Refs'].items():
         # Find matching in per_portion
         match = Match()
         product_match = match.get_best_match(component, list(per_portion.keys()))
-
-        print(f'Matched {component} to {product_match}')
 
         if product_match:
             try:
