@@ -12,6 +12,9 @@ from fake_headers import Headers
 
 class Place_orders():
     def __init__(self,ids):
+
+        name = input('Name >>> ')
+
         self.headers = Headers(browser="chrome", os="win", headers=False).generate()
 
         options = webdriver.ChromeOptions()
@@ -27,13 +30,10 @@ class Place_orders():
         })
         self.driver.get(f"https://order.maxburgers.com/se/sv-se/categories?menuType=eatin&storeId=225")  # Load domain first!
 
-        with open("cookies.json", "r") as f:
-            cookies = json.load(f)
-
-        for cookie in cookies:
-            # Remove "sameSite" if not accepted by Selenium
-            cookie.pop('sameSite', None)
-            self.driver.add_cookie(cookie)
+        try:
+            self.add_cookie(name)
+        except KeyError:
+            self.create_cookie(name)
 
         self.driver.refresh()
         time.sleep(5)
@@ -124,7 +124,6 @@ class Place_orders():
             button.click()
 
 
-            input("Press Enter to continue...")
             #contine
             try:
                 button = WebDriverWait(self.driver, 10).until(
@@ -150,6 +149,55 @@ class Place_orders():
                 elif "siffror" in input_field.get_attribute("placeholder").lower():
                     input_field.send_keys("256")
 
+    def load_cookies(self):
+        with open("cookies.json", "r") as f:
+            cookies = json.load(f)
+            return cookies
 
+    def add_cookie(self, name):
+        cookies = self.load_cookies()
+
+        if name not in cookies.keys():
+            raise KeyError('Name not found in cookies file. Please create a cookie')
+
+        for cookie in cookies[name]:
+            # Remove "sameSite" if not accepted by Selenium
+            cookie.pop('sameSite', None)
+            self.driver.add_cookie(cookie)
+
+    def create_cookie(self, name):
+        try:
+            button = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.CLASS_NAME, "cookie")))
+            button.click()
+        except:
+            print("no popup")
+        
+        button = WebDriverWait(self.driver, 10).until(
+            EC.element_to_be_clickable((By.CLASS_NAME, "nav")))
+        button.click()
+        
+        time.sleep(1)
+
+        login_link = WebDriverWait(self.driver, 20).until(
+            EC.element_to_be_clickable((By.LINK_TEXT, "Logga in / registrera")))
+        login_link.click()
+
+        try:
+            WebDriverWait(self.driver, 300).until(
+                EC.url_to_be('https://order.maxburgers.com/se/sv-se/categories?menuType=eatin&storeId=225')
+            )
+
+            driver_cookies = self.driver.get_cookies()
+            cookies_data = self.load_cookies()
+            cookies_data[name] = driver_cookies
+            with open('cookies.json', 'w', encoding='utf-8') as f:
+                try:
+                    json.dump(cookies_data, f)
+                except Exception as e:
+                    print(f'Error vid sparning av cookie: {e}')
+                    
+        except Exception as e:
+            print(f'Error vid vänta på inloggning: {e}')
 
 order = Place_orders([20118,20054])
