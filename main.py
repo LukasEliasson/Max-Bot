@@ -26,6 +26,7 @@ max_menu = res.json()
 items = []
 
 secret_menu_count = 1
+secret_menu_ids = {}
 print('Secret Menu:')
 for id, product in max_menu['Refs'].items():
     name = product['Title']
@@ -33,6 +34,7 @@ for id, product in max_menu['Refs'].items():
     
     if '15621' in product['Categories'].keys():
         print(f'{secret_menu_count}. {name} - {price} kr (ID: {product['Id']})')
+        secret_menu_ids[secret_menu_count] = product['Id']
         secret_menu_count += 1
         continue
 
@@ -66,6 +68,9 @@ for id, product in max_menu['Refs'].items():
                 'price': price,
                 'kcal': kcal
             })
+
+def get_secret_menu_id(id):
+    return secret_menu_ids[id]
 
 best_combo = []
 max_kcal = 0

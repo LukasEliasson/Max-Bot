@@ -9,6 +9,7 @@ from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from fake_headers import Headers
+from main import get_secret_menu_id
 
 try:
     with open('cookies.json', 'x') as f:
@@ -16,10 +17,28 @@ try:
 except FileExistsError:
     pass
 
+product_ids = []
+
 class Place_orders():
     def __init__(self,ids):
 
-        name = input('Name >>> ')
+        name = input('\nName >>> ')
+
+        print('\nSelect items to order (type "exit" when done):')
+        selecting = True
+        while selecting:
+            selection = input('\nChoose number (1-35) >>> ')
+
+            if selection.lower() == 'exit':
+                selecting = False
+                continue
+
+            try:
+                product_ids.append(get_secret_menu_id(int(selection)))
+            except:
+                print('\nNot a valid number.')
+            finally:
+                print(f'\nProducts in cart: {product_ids}')
 
         self.headers = Headers(browser="chrome", os="win", headers=False).generate()
 
@@ -206,4 +225,4 @@ class Place_orders():
         except Exception as e:
             print(f'Error vid vänta på inloggning: {e}')
 
-order = Place_orders([20118,20054])
+order = Place_orders(product_ids)
