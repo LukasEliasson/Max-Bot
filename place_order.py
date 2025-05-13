@@ -55,7 +55,7 @@ class Place_orders():
         time.sleep(2)
         self.order_items(ids)
         time.sleep(1)
-        self.buy_order(1,2,3)
+        self.buy_order(False)
 
         input("Press Enter to continue...")
 
@@ -66,6 +66,7 @@ class Place_orders():
             session.cookies.set(cookie['name'], cookie['value'])
 
         url = f"https://order.maxburgers.com/orders/{self.order_id}/products"
+
         payload = {
     "products": [ {"Id": id} for id in ids]
         }
@@ -73,7 +74,7 @@ class Place_orders():
         print(order)
 
 
-    def buy_order(self,card,date,pin):
+    def buy_order(self,buy,card = None,date = None,pin = None):
         try:
             button = WebDriverWait(self.driver, 10).until(
                 EC.element_to_be_clickable((By.CLASS_NAME, "cookie")))
@@ -97,58 +98,58 @@ class Place_orders():
         button.click()
 
 
+        if buy:
+            try:
+                # bascket
+                button = WebDriverWait(self.driver, 5).until(
+                    EC.element_to_be_clickable((By.ID, "button-basket")))
+                button.click()
+            except:
+                print("no basket button")
 
-        try:
-            # bascket
-            button = WebDriverWait(self.driver, 5).until(
-                EC.element_to_be_clickable((By.ID, "button-basket")))
-            button.click()
-        except:
-            print("no basket button")
-
-        button = WebDriverWait(self.driver, 10).until(
-        EC.element_to_be_clickable((By.ID, "button-checkout")))
-        button.click()
-
-        # go to checkout
-        button = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.CLASS_NAME, "next")))
-        button.click()
-
-
-
-        # select card
-        button = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.XPATH,"//li[contains(@ng-click, 'select(paymentOpt)') and contains(., 'Nytt kredit- / betalkort')]")))
-        button.click()
-
-
-        input("Press Enter to continue...")
-        #contine
-        try:
             button = WebDriverWait(self.driver, 10).until(
-            EC.element_to_be_clickable((By.ID, "button-pay")))
+            EC.element_to_be_clickable((By.ID, "button-checkout")))
             button.click()
-        except:
+
+            # go to checkout
             button = WebDriverWait(self.driver, 10).until(
-                EC.element_to_be_clickable((By.ID, "button-checkout")))
+                EC.element_to_be_clickable((By.CLASS_NAME, "next")))
             button.click()
 
 
-        time.sleep(15)
 
-        #card, date, pin
-
-        inputs = self.driver.find_elements(By.CLASS_NAME, "js-iframe-input input-field")
-
-        for input_field in inputs:
-            if "1234 5678 9012 3456" in input_field.get_attribute("placeholder").lower():
-                input_field.send_keys("4111 1111 1111 1111")
-            elif "mm/åå" in input_field.get_attribute("placeholder").lower():
-                input_field.send_keys("0226")
-            elif "siffror" in input_field.get_attribute("placeholder").lower():
-                input_field.send_keys("256")
+            # select card
+            button = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.XPATH,"//li[contains(@ng-click, 'select(paymentOpt)') and contains(., 'Nytt kredit- / betalkort')]")))
+            button.click()
 
 
+            input("Press Enter to continue...")
+            #contine
+            try:
+                button = WebDriverWait(self.driver, 10).until(
+                EC.element_to_be_clickable((By.ID, "button-pay")))
+                button.click()
+            except:
+                button = WebDriverWait(self.driver, 10).until(
+                    EC.element_to_be_clickable((By.ID, "button-checkout")))
+                button.click()
 
-order = Place_orders([18265])
+
+            time.sleep(15)
+
+            #card, date, pin
+
+            inputs = self.driver.find_elements(By.CLASS_NAME, "js-iframe-input input-field")
+
+            for input_field in inputs:
+                if "1234 5678 9012 3456" in input_field.get_attribute("placeholder").lower():
+                    input_field.send_keys("4111 1111 1111 1111")
+                elif "mm/åå" in input_field.get_attribute("placeholder").lower():
+                    input_field.send_keys("0226")
+                elif "siffror" in input_field.get_attribute("placeholder").lower():
+                    input_field.send_keys("256")
+
+
+
+order = Place_orders([20118,20054])
