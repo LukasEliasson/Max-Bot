@@ -10,6 +10,12 @@ from selenium.webdriver.support import expected_conditions as EC
 from selenium.webdriver.common.keys import Keys
 from fake_headers import Headers
 
+try:
+    with open('cookies.json', 'x') as f:
+        json.dump({}, f)
+except FileExistsError:
+    pass
+
 class Place_orders():
     def __init__(self,ids):
 
