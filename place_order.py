@@ -2,17 +2,22 @@ from seleniumwire import webdriver
 import requests
 import time
 import gzip
-from io import BytesIO
 import json
+import logging
 from selenium.webdriver.common.by import By
 from selenium.webdriver.support.ui import WebDriverWait
 from selenium.webdriver.support import expected_conditions as EC
-from selenium.webdriver.common.keys import Keys
 from fake_headers import Headers
 from main import get_secret_menu_id
+import sys
+import os
+
+logging.basicConfig(filename='app.log', level=logging.ERROR)
+
+cookies_file = 'cookies.json'
 
 try:
-    with open('cookies.json', 'x') as f:
+    with open(cookies_file, 'x') as f:
         json.dump({}, f)
 except FileExistsError:
     pass
@@ -42,18 +47,40 @@ class Place_orders():
 
         self.headers = Headers(browser="chrome", os="win", headers=False).generate()
 
+        if getattr(sys, 'frozen', False):
+            base_path = os.path.dirname(sys.executable)
+        else:
+            base_path = os.path.dirname(__file__)
+
+        sw_cache_path = os.path.join(base_path, 'seleniumwire-cache')
+        os.makedirs(sw_cache_path, exist_ok=True)
+
+        seleniumwire_options = {
+            'storage_path': sw_cache_path
+        }
+
         options = webdriver.ChromeOptions()
         options.add_experimental_option("excludeSwitches", ["enable-automation"])
         options.add_experimental_option("useAutomationExtension", False)
         options.add_argument("--disable-blink-features=AutomationControlled")
-
-        self.driver = webdriver.Chrome(options=options)
-        self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
-            "source": """
-                Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
-            """
-        })
-        self.driver.get(f"https://order.maxburgers.com/se/sv-se/categories?menuType=eatin&storeId=225")  # Load domain first!
+        
+        try:
+            self.driver = webdriver.Chrome(seleniumwire_options=seleniumwire_options, options=options)
+            self.driver.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+                "source": """
+                    Object.defineProperty(navigator, 'webdriver', {get: () => undefined});
+                """
+            })
+            self.driver.get(f"https://order.maxburgers.com/se/sv-se/categories?menuType=eatin&storeId=225")  # Load domain first!
+        except Exception as e:
+            logging.error(f'Error occurred: {e}')
+            print(f'Error occurred: {e}')
+            return
+        
+        if not hasattr(self, 'driver'):
+            logging.error(f'{AttributeError('Finns ingen WebDriver attribut.')}')
+            print('WebDriver kunde inte startas. Avbryter.')
+            return
 
         try:
             self.add_cookie(name)
@@ -175,7 +202,7 @@ class Place_orders():
                     input_field.send_keys("256")
 
     def load_cookies(self):
-        with open("cookies.json", "r") as f:
+        with open(cookies_file, "r") as f:
             cookies = json.load(f)
             return cookies
 
@@ -216,7 +243,7 @@ class Place_orders():
             driver_cookies = self.driver.get_cookies()
             cookies_data = self.load_cookies()
             cookies_data[name] = driver_cookies
-            with open('cookies.json', 'w', encoding='utf-8') as f:
+            with open(cookies_file, 'w', encoding='utf-8') as f:
                 try:
                     json.dump(cookies_data, f)
                 except Exception as e:

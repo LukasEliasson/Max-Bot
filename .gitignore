@@ -1,3 +1,8 @@
 .idea
 cookies.json
 __pycache__
+app.log
+place_order.spec
+build
+dist
+seleniumwire-cache

@@ -1,6 +1,6 @@
 import requests
 from bs4 import BeautifulSoup
-from stringmatch import Match
+from rapidfuzz import process
 
 res = requests.get('https://web-images.futureordering.com/menus/maxburgers/se-sv-se-225-eatin.json.gz')
 net = requests.get('https://www.max.se/maten/naringsvarden/', verify=False)
@@ -24,6 +24,12 @@ for line in filtered_lines:
 
 max_menu = res.json()
 items = []
+
+def get_best_match(query, choices):
+    result = process.extractOne(query, choices)
+    if result and result[1] > 80:
+        return result[0]
+    return None
 
 secret_menu_count = 1
 secret_menu_ids = {}
@@ -54,8 +60,7 @@ for id, product in max_menu['Refs'].items():
     for component in components:
 
         # Find matching in per_portion
-        match = Match()
-        product_match = match.get_best_match(component, list(per_portion.keys()))
+        product_match = get_best_match(component, list(per_portion.keys()))
 
         if product_match:
             try:
